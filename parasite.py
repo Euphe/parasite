@@ -31,7 +31,7 @@ modes = ("collect_only", "default")
 class Parasite():
     main_loop_period = 30
     mode = "default"
-    collection_time = ("23","47")
+    collection_time = ("01","00")
 
     reddit_username = 'Euphetar'
     reddit_password = 'euphemia'
