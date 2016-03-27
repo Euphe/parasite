@@ -34,7 +34,7 @@ class Keeper():
         return self.cursor.execute('select * from '+self.prefix+'_images').fetchone()
 
     def dump_schedule(self):
-        schedule = self.cursor.execute('select * from '+self.prefix+'_schedule WHERE post_type = new;').fetchmany()
+        schedule = self.cursor.execute('select * from '+self.prefix+'_schedule WHERE post_type = \'new\';').fetchmany()
         for post in schedule:
             img_id = post[2]
             self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 0 WHERE  id = '+str(img_id)+';')

@@ -51,10 +51,11 @@ class Collector():
 
 
     def collect(self):
+        posts = []
         for rsub in self.target_subreddits:
             sub = self.r.get_subreddit(rsub)
             if self.target_category == "hot":
-                posts = list(sub.get_hot(limit=self.target_amount))
+                posts = posts + list(sub.get_hot(limit=self.target_amount))
 
         return self.store(posts)
 

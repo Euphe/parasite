@@ -92,6 +92,7 @@ class Parasite():
         self.waiting_for_collection = False
 
         self.last_collected = datetime(MINYEAR,1,1,1,1,1) 
+        self.last_posted = datetime(MINYEAR,1,1,1,1,1) 
 
     @property
     def upcoming(self):
@@ -139,9 +140,13 @@ class Parasite():
                         logger.debug('Out of posts, waiting for collection.')
                 else:
                     if now >= self.upcoming[1] and abs(self.upcoming[1] - now) <= timedelta(minutes=5):
+
+                        if abs(self.last_posted - now) <= timedelta(minutes=10):
+                            raise(Exception('Posting too fast! Might get banned!'))
                         logger.debug("Posting time %s", str(self.upcoming[1]))
                         logger.debug("Posting upcoming")
                         self.post_upcoming()
+                        self.last_posted = datetime.now()
                         self.upcoming = self.keeper.get_upcoming_post()
 
     def clean_up(self):
