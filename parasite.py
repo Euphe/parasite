@@ -3,10 +3,11 @@ import collector
 import scheduler
 import submitter
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, MINYEAR
 import atexit
 import logging
-
+import traceback
+import sys
 
 from logging.handlers import TimedRotatingFileHandler
 
@@ -26,7 +27,7 @@ modes = ("collect_only", "default")
 class Parasite():
     main_loop_period = 30
     mode = "default"
-    collection_time = ("23","30")
+    collection_time = ("23","47")
 
     reddit_username = 'Euphetar'
     reddit_password = 'euphemia'
@@ -40,11 +41,6 @@ class Parasite():
     vk_group_id = "118173804"
     vk_user_login = "kururugisuzakueuphe@ya.ru"
     vk_user_password = "угзруьшф"
-
-    target_subreddit = "Funnypics"
-    target_category = "hot"
-    target_amount = 1
-    pics_path = 'pics/'
 
     schedule = [
         ("8:30", "old"),
@@ -78,20 +74,24 @@ class Parasite():
     # total new: 8
 
     def __init__(self):
-        self.target_subreddit = "Funnypics"
+        self.target_subreddits = ["Funnypics", "Daily_Funny_Pics"]
         self.target_category = "hot"
-        self.target_amount = 20
+        self.target_amount = 45
         self.pics_path = 'pics/'
         self.prefix = "funny"
 
         self.keeper = keeper.Keeper(self.prefix)
 
-        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.target_subreddit,self.target_category,self.target_amount,self.pics_path,  keeper = self.keeper)
+        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.target_subreddits,self.target_category,self.target_amount,self.pics_path,  keeper = self.keeper)
 
         self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password)
 
         self.scheduler = scheduler.Scheduler(self.keeper, self.schedule)
         self._upcoming = None
+
+        self.waiting_for_collection = False
+
+        self.last_collected = datetime(MINYEAR,1,1,1,1,1) 
 
     @property
     def upcoming(self):
@@ -115,29 +115,34 @@ class Parasite():
         today = datetime(now.year, now.month, now.day)
         collection_datetime = today + timedelta(hours=int(self.collection_time[0]), minutes=int(self.collection_time[1]))
 
-        if now >= collection_datetime and abs(collection_datetime - now) <= timedelta(minutes=5):
+        if now >= collection_datetime and abs(collection_datetime - now) <= timedelta(minutes=5) and abs(self.last_collected - now) >= timedelta(minutes=5):
             logger.debug("Collection_datetime %s", str(collection_datetime))
             self.keeper.dump_schedule()
             logger.debug("Dumped schedule")
             logger.debug("Collecting")
             self.collector.collect()
+            self.last_collected = datetime.now()
+            self.waiting_for_collection = False
             if self.mode != 'collect_only':
                 logger.debug("Constructing schedule")
                 self.scheduler.construct_schedule()
                 self.upcoming = self.keeper.get_upcoming_post()
                 logger.debug("Upcoming post %s", str(self.upcoming))
+            logger.debug("Finished collection")
 
-        if self.mode != 'collect_only':
-            if not self.upcoming:
-                self.upcoming = self.keeper.get_upcoming_post()
+        if not self.waiting_for_collection:
+            if self.mode != 'collect_only':
                 if not self.upcoming:
-                    logger.debug('Out of posts, waiting for collection.')
-
-            if now >= self.upcoming[1] and abs(self.upcoming[1] - now) <= timedelta(minutes=5):
-                logger.debug("Posting time %s", str(self.upcoming[1]))
-                logger.debug("Posting upcoming")
-                self.post_upcoming()
-                self.upcoming = self.keeper.get_upcoming_post()
+                    self.upcoming = self.keeper.get_upcoming_post()
+                    if not self.upcoming:
+                        self.waiting_for_collection = True
+                        logger.debug('Out of posts, waiting for collection.')
+                else:
+                    if now >= self.upcoming[1] and abs(self.upcoming[1] - now) <= timedelta(minutes=5):
+                        logger.debug("Posting time %s", str(self.upcoming[1]))
+                        logger.debug("Posting upcoming")
+                        self.post_upcoming()
+                        self.upcoming = self.keeper.get_upcoming_post()
 
     def clean_up(self):
         logger.debug("Cleaning up")
@@ -148,11 +153,8 @@ class Parasite():
             logger.debug("Started main loop")
             do_every(self.main_loop_period, self.tick)
         except Exception as e:
-            logger.debug("Main loop shut down with exception %s", str(e) )
-        finally:
-            self.clean_up()
-
-
+            logger.debug("Main loop shut down with exception")
+            logger.exception("message")
 
 log_path = './logs/log'
 logger = logging.getLogger('parasite_logger')

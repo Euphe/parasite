@@ -16,7 +16,7 @@ uri_name_ptrn = re.compile(r'\w+\.[a-z]+$')
 
 
 class Collector():
-    def __init__(self, username, password, app_client_id, app_secret,imgur_client_id,imgur_secret,target_subreddit,target_category,target_amount,pics_path, keeper = None):
+    def __init__(self, username, password, app_client_id, app_secret,imgur_client_id,imgur_secret,target_subreddits,target_category,target_amount,pics_path, keeper = None):
         self.username = username
         self.password = password
         self.app_client_id = app_client_id
@@ -24,7 +24,7 @@ class Collector():
         self.imgur_client_id = imgur_client_id
         self.imgur_secret = imgur_secret
 
-        self.target_subreddit = target_subreddit
+        self.target_subreddits = target_subreddits
         self.target_category = target_category
         self.target_amount = target_amount
         self.pics_path = pics_path
@@ -51,9 +51,10 @@ class Collector():
 
 
     def collect(self):
-        sub = self.r.get_subreddit(self.target_subreddit)
-        if self.target_category == "hot":
-            posts = list(sub.get_hot(limit=self.target_amount))
+        for rsub in self.target_subreddits:
+            sub = self.r.get_subreddit(rsub)
+            if self.target_category == "hot":
+                posts = list(sub.get_hot(limit=self.target_amount))
 
         return self.store(posts)
 

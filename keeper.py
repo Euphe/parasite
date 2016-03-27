@@ -34,7 +34,7 @@ class Keeper():
         return self.cursor.execute('select * from '+self.prefix+'_images').fetchone()
 
     def dump_schedule(self):
-        schedule = self.cursor.execute('select * from '+self.prefix+'_schedule;').fetchmany()
+        schedule = self.cursor.execute('select * from '+self.prefix+'_schedule WHERE post_type = new;').fetchmany()
         for post in schedule:
             img_id = post[2]
             self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 0 WHERE  id = '+str(img_id)+';')
@@ -58,13 +58,24 @@ class Keeper():
     def get_upcoming_post(self):
         return self.cursor.execute('select * from '+self.prefix+'_schedule ORDER BY datetime(date) ASC LIMIT 1;').fetchone()
 
+    def get_pool(self, post_type):
+        if post_type == "new":
+            return self.cursor.execute('select * from '+self.prefix+'_images where posted = 0').fetchall()
+        else:
+            return self.cursor.execute('select * from '+self.prefix+'_images where posted = 1').fetchall()
+
+    def set_posted(self, imgs):
+        for img in imgs:
+            img_id = img[0]
+            self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 1 WHERE  id = '+str(img[0])+';')
+        self.connection.commit()
+
     def get_img_for_type(self, post_type):
         post = None
-
         if post_type == "new":
-            posts = self.cursor.execute('select * from '+self.prefix+'_images where posted = 0').fetchmany()
+            posts = self.cursor.execute('select * from '+self.prefix+'_images where posted = 0').fetchall()
         elif post_type == "old":
-            posts = self.cursor.execute('select * from '+self.prefix+'_images where posted = 1').fetchmany()
+            posts = self.cursor.execute('select * from '+self.prefix+'_images where posted = 1').fetchall()
 
         if posts:
             post = random.choice(posts)
