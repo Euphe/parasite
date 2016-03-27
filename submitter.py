@@ -1,5 +1,11 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import vk
 import requests
+
+
+
 class Submitter():
     def __init__(self, group_id, app_id, secret_key,user_login, user_password, keeper=None):
         self.app_id = app_id

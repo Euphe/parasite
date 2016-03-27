@@ -1,5 +1,11 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import sqlite3
 import random
+
+
+
 class Blob:
     """Automatically encode a binary string."""
     def __init__(self, s):
