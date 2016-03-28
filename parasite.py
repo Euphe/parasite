@@ -155,7 +155,6 @@ class Parasite():
                 logger.debug("Upcoming post %s", str(self.upcoming))
                 logger.debug("Local at %s", str(local_time(self.upcoming[1], self.timezone)))
             logger.debug("Finished collection")
-
         if not self.waiting_for_collection:
             if self.mode != 'collect_only':
                 self.upcoming = self.keeper.get_upcoming_post()

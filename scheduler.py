@@ -29,7 +29,7 @@ class Scheduler():
 			'old':self.keeper.get_pool('old')
 		}
 		posted = []
-		for entry in self.schedule_blueprint:
+		for entry in tuple(self.schedule_blueprint):
 			time = entry[0].split(":")
 			post_type = entry[1]
 			post_time = today + timedelta(hours=int(time[0]), minutes=int(time[1]))
