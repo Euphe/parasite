@@ -4,14 +4,25 @@
 
 from datetime import datetime, timedelta
 import random
+import pytz 
+
+def utc_to_local(utc_dt, tz):
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(tz)
+    return tz.normalize(local_dt) 
+
+def local_time(utc_dt, tz):
+    return utc_to_local(utc_dt, tz)
+
+
 class Scheduler():
-	def __init__(self, keeper, schedule = []):
+	def __init__(self, keeper, timezone, schedule = []):
 		self.schedule_blueprint = schedule
 		self.keeper = keeper
+		self.timezone = timezone
 
 	def construct_schedule(self):
 		schedule = []
-		now = datetime.now()
+		now = local_time(datetime.utcnow(), self.timezone)
 		today = datetime(now.year, now.month, now.day)
 		pools = {
 			'new':self.keeper.get_pool('new'),

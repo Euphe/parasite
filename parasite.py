@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-
+import os
+import sys
+import getopt 
 import keeper
 import collector
 import scheduler
@@ -12,7 +13,7 @@ import atexit
 import logging
 import traceback
 import sys
-
+import pytz
 from logging.handlers import TimedRotatingFileHandler
 
 def do_every(period,f,*args):
@@ -27,9 +28,17 @@ def do_every(period,f,*args):
         time.sleep(next(g))
         f(*args)
 
+def utc_to_local(utc_dt, tz):
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(tz)
+    return tz.normalize(local_dt) 
+
+def local_time(utc_dt, tz):
+    return utc_to_local(utc_dt, tz)
+
 modes = ("collect_only", "default")
 class Parasite():
-    main_loop_period = 30
+    timezone = pytz.timezone('Europe/Moscow')
+    main_loop_period = 60
     mode = "default"
     collection_time = ("01","00")
 
@@ -80,23 +89,29 @@ class Parasite():
     def __init__(self):
         self.target_subreddits = ["Funnypics", "Daily_Funny_Pics"]
         self.target_category = "hot"
-        self.target_amount = 45
+        self.target_amount = 30
         self.pics_path = 'pics/'
         self.prefix = "funny"
 
-        self.keeper = keeper.Keeper(self.prefix)
+        if not os.path.exists(self.pics_path.split('/')[0]):
+            os.makedirs(self.pics_path.split('/')[0])
 
-        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.target_subreddits,self.target_category,self.target_amount,self.pics_path,  keeper = self.keeper)
+        self.keeper = keeper.Keeper(self.timezone, self.prefix)
+
+        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.target_subreddits,self.target_category,self.target_amount,self.pics_path, self.timezone,  keeper = self.keeper)
 
         self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password)
 
-        self.scheduler = scheduler.Scheduler(self.keeper, self.schedule)
+        self.scheduler = scheduler.Scheduler(self.keeper, self.timezone, self.schedule)
         self._upcoming = None
 
         self.waiting_for_collection = False
 
         self.last_collected = datetime(MINYEAR,1,1,1,1,1) 
         self.last_posted = datetime(MINYEAR,1,1,1,1,1) 
+
+        self.force_collection = False
+
 
     @property
     def upcoming(self):
@@ -116,41 +131,45 @@ class Parasite():
         self.keeper.remove_from_schedule(self.upcoming)
 
     def tick(self):
-        now = datetime.now()
-        today = datetime(now.year, now.month, now.day)
+        now = local_time(datetime.utcnow(), self.timezone)
+        today = local_time(datetime(now.year, now.month, now.day), self.timezone)
         collection_datetime = today + timedelta(hours=int(self.collection_time[0]), minutes=int(self.collection_time[1]))
+        #print(self.force_collection)
+        if self.force_collection or (now >= collection_datetime and abs(collection_datetime - now) <= timedelta(minutes=5) and abs(self.last_collected - now) >= timedelta(minutes=5) ):
 
-        if now >= collection_datetime and abs(collection_datetime - now) <= timedelta(minutes=5) and abs(self.last_collected - now) >= timedelta(minutes=5):
-            logger.debug("Collection_datetime %s", str(collection_datetime))
+            if self.force_collection:
+                self.force_collection = False
+                logger.debug("Forced collection at %s", str(now))
+            else:
+                logger.debug("Collection_datetime %s", str(collection_datetime))
             self.keeper.dump_schedule()
             logger.debug("Dumped schedule")
             logger.debug("Collecting")
             self.collector.collect()
-            self.last_collected = datetime.now()
+            self.last_collected = local_time(datetime.utcnow(), self.timezone)
             self.waiting_for_collection = False
             if self.mode != 'collect_only':
                 logger.debug("Constructing schedule")
                 self.scheduler.construct_schedule()
                 self.upcoming = self.keeper.get_upcoming_post()
                 logger.debug("Upcoming post %s", str(self.upcoming))
+                logger.debug("Local at %s", str(local_time(self.upcoming[1], self.timezone)))
             logger.debug("Finished collection")
 
         if not self.waiting_for_collection:
             if self.mode != 'collect_only':
+                self.upcoming = self.keeper.get_upcoming_post()
                 if not self.upcoming:
-                    self.upcoming = self.keeper.get_upcoming_post()
-                    if not self.upcoming:
-                        self.waiting_for_collection = True
-                        logger.debug('Out of posts, waiting for collection.')
+                    self.waiting_for_collection = True
+                    logger.debug('Out of posts, waiting for collection.')
                 else:
-                    if now >= self.upcoming[1] and abs(self.upcoming[1] - now) <= timedelta(minutes=5):
-
+                    if now >= local_time(self.upcoming[1], self.timezone) and abs(local_time(self.upcoming[1], self.timezone)  - now) <= timedelta(minutes=5):
                         if abs(self.last_posted - now) <= timedelta(minutes=10):
                             raise(Exception('Posting too fast! Might get banned!'))
                         logger.debug("Posting time %s", str(self.upcoming[1]))
                         logger.debug("Posting upcoming")
                         self.post_upcoming()
-                        self.last_posted = datetime.now()
+                        self.last_posted = local_time(datetime.utcnow(), self.timezone)
                         self.upcoming = self.keeper.get_upcoming_post()
 
     def clean_up(self):
@@ -164,6 +183,25 @@ class Parasite():
         except Exception as e:
             logger.debug("Main loop shut down with exception")
             logger.exception("message")
+
+    def start(self,argv):
+        try:  
+            opts, args = getopt.getopt(argv, "f", ["force_collection"])
+        except getopt.GetoptError:
+            print('invalid params')
+            sys.exit(2)   
+
+        for opt, arg in opts:     
+            #print(opt)                                      
+            if opt in ('-f', "--force_collection"):
+                #print('Force collection enabled')
+                self.force_collection = True
+
+        atexit.register(self.clean_up)
+        self.main_loop()
+
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
 log_path = './logs/log'
 logger = logging.getLogger('parasite_logger')
@@ -179,7 +217,11 @@ fh.setFormatter(formatter)
 logger.addHandler(console)
 logger.addHandler(fh)
 
-parasite = Parasite()
-atexit.register(parasite.clean_up)
-parasite.main_loop()
+
+
+
+if __name__ == "__main__":
+    parasite = Parasite()
+    parasite.start(sys.argv[1:])
+
 

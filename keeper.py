@@ -3,8 +3,14 @@
 
 import sqlite3
 import random
+import datetime
+import pytz
+def utc_to_local(utc_dt, tz):
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(tz)
+    return tz.normalize(local_dt) 
 
-
+def local_time(utc_dt, tz):
+    return utc_to_local(utc_dt, tz)
 
 class Blob:
     """Automatically encode a binary string."""
@@ -15,11 +21,12 @@ class Blob:
         return "'%s'" % sqlite3.Binary(self.s)
 
 class Keeper():
-    def __init__(self, prefix = "default"):
+    def __init__(self, timezone, prefix = "default"):
         self.prefix = prefix
         self.connection = sqlite3.connect('parasite.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         self.cursor = self.connection.cursor()
         self.init_schema()
+        self.timezone = timezone
 
     def init_schema(self):    
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS '''+self.prefix+'''_images(id INTEGER  PRIMARY KEY, date timestamp, link text UNIQUE, path text UNIQUE, posted INTEGER)''')
@@ -62,7 +69,7 @@ class Keeper():
         self.connection.commit()
 
     def get_upcoming_post(self):
-        return self.cursor.execute('select * from '+self.prefix+'_schedule ORDER BY datetime(date) ASC LIMIT 1;').fetchone()
+        return self.cursor.execute('select * from '+self.prefix+'_schedule WHERE datetime(date) > datetime(\''+local_time(datetime.datetime.utcnow(), self.timezone).strftime("%Y-%m-%d %H:%M:%S")+'\') ORDER BY datetime(date)  ASC LIMIT 1 ;').fetchone()
 
     def get_pool(self, post_type):
         if post_type == "new":
