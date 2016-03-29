@@ -25,6 +25,7 @@ import pytz
 import socket
 socket.setdefaulttimeout(30)
 
+from util import utc_time_to_russian
 class Collector():
     def __init__(self, username, password, app_client_id, app_secret,imgur_client_id,imgur_secret,target_subreddits,target_category,target_amount,pics_path, timezone, keeper = None):
         self.username = username
@@ -88,7 +89,7 @@ class Collector():
                 post.url, name = self.get_url_and_name(post.url)
                 path = self.pics_path + name
                 if self.keeper:
-                    self.keeper.add_image([(None, datetime.datetime.utcnow(), post.url, path)])
+                    self.keeper.add_image([(None, utc_time_to_russian(datetime.datetime.utcnow()), post.url, path)])
                 image = self.download_photo(post.url, path)
 
             except Exception as e:

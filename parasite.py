@@ -15,6 +15,7 @@ import traceback
 import sys
 import pytz
 from logging.handlers import TimedRotatingFileHandler
+from util import utc_time_to_russian
 def do_every(period,f,*args):
     def g_tick():
         t = time.time()
@@ -125,7 +126,7 @@ class Parasite():
 
     def tick(self):
         logger.debug("Calculating dates")
-        now = datetime.utcnow()
+        now = utc_time_to_russian(datetime.utcnow())
         today = datetime(now.year, now.month, now.day)
         collection_datetime = today + timedelta(hours=int(self.collection_time[0]), minutes=int(self.collection_time[1]))
         #print(self.force_collection)

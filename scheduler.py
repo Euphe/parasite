@@ -5,7 +5,7 @@
 from datetime import datetime, timedelta
 import random
 import pytz 
-from util import russian_time_to_utc
+from util import russian_time_to_utc, utc_time_to_russian
 
 
 class Scheduler():
@@ -16,7 +16,7 @@ class Scheduler():
 
 	def construct_schedule(self):
 		schedule = []
-		now = russian_time_to_utc(datetime.utcnow())
+		now = utc_time_to_russian(datetime.utcnow())
 		today = datetime(now.year, now.month, now.day)
 		pools = {
 			'new':self.keeper.get_pool('new'),
