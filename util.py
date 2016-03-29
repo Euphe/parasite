@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 from datetime import timedelta
 def russian_time_to_utc(dtm):
 	return dtm - timedelta(hours=3) #КОСТЫЛЬНАЯ МАГИЯ
