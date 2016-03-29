@@ -101,8 +101,8 @@ class Parasite():
 
         self.waiting_for_collection = False
 
-        self.last_collected = datetime.utcnow(MINYEAR,1,1,1,1,1)
-        self.last_posted = datetime.utcnow(MINYEAR,1,1,1,1,1)
+        self.last_collected = datetime(MINYEAR,1,1,1,1,1)
+        self.last_posted = datetime(MINYEAR,1,1,1,1,1) 
 
         self.force_collection = False
 
