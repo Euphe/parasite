@@ -5,13 +5,7 @@
 from datetime import datetime, timedelta
 import random
 import pytz 
-
-def utc_to_local(utc_dt, tz):
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(tz)
-    return tz.normalize(local_dt) 
-
-def local_time(utc_dt, tz):
-    return utc_to_local(utc_dt, tz)
+from util import russian_time_to_utc
 
 
 class Scheduler():
@@ -22,7 +16,7 @@ class Scheduler():
 
 	def construct_schedule(self):
 		schedule = []
-		now = local_time(datetime.utcnow(), self.timezone)
+		now = russian_time_to_utc(datetime.utcnow())
 		today = datetime(now.year, now.month, now.day)
 		pools = {
 			'new':self.keeper.get_pool('new'),

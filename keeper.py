@@ -5,12 +5,9 @@ import sqlite3
 import random
 import datetime
 import pytz
-def utc_to_local(utc_dt, tz):
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(tz)
-    return tz.normalize(local_dt) 
-
-def local_time(utc_dt, tz):
-    return utc_to_local(utc_dt, tz)
+import logging
+from util import utc_time_to_russian
+logger = logging.getLogger('parasite_logger')
 
 class Blob:
     """Automatically encode a binary string."""
@@ -41,12 +38,14 @@ class Keeper():
         self.connection.commit()
 
     def get_image(self, img_id):
+        logger.debug('Getting img')
         return self.cursor.execute('select * from '+self.prefix+'_images WHERE id = '+str(img_id)).fetchone()
 
     def get_last_image(self):
         return self.cursor.execute('select * from '+self.prefix+'_images').fetchone()
 
     def dump_schedule(self):
+        logger.debug('Dumping schedule')
         schedule = self.cursor.execute('select * from '+self.prefix+'_schedule WHERE post_type = \'new\';').fetchmany()
         for post in schedule:
             img_id = post[2]
@@ -59,31 +58,38 @@ class Keeper():
 
 
     def store_schedule(self, schedule):
+        logger.debug('Storing schedule')
         values = schedule
         self.cursor.executemany("INSERT INTO "+self.prefix+"_schedule VALUES (Null, ?, ?, ?)", values)
         self.connection.commit()
 
     def remove_from_schedule(self, post):
+        logger.debug('Deleting from schedule')
         post_id = post[0]
         self.cursor.execute('''DELETE FROM '''+self.prefix+'''_schedule WHERE id = '''+str(post_id))
         self.connection.commit()
 
     def get_upcoming_post(self):
-        return self.cursor.execute('select * from '+self.prefix+'_schedule WHERE datetime(date) > datetime(\''+local_time(datetime.datetime.utcnow(), self.timezone).strftime("%Y-%m-%d %H:%M:%S")+'\') ORDER BY datetime(date)  ASC LIMIT 1 ;').fetchone()
+        sql = 'select * from '+self.prefix+'_schedule WHERE datetime(date) > datetime(\''+utc_time_to_russian(datetime.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")+'\') ORDER BY datetime(date)  ASC LIMIT 1 ;'
+        logger.debug('SQL: %s', sql)
+        return self.cursor.execute(sql).fetchone()
 
     def get_pool(self, post_type):
+        logger.debug('Getting pools')
         if post_type == "new":
             return self.cursor.execute('select * from '+self.prefix+'_images where posted = 0').fetchall()
         else:
             return self.cursor.execute('select * from '+self.prefix+'_images where posted = 1').fetchall()
 
     def set_posted(self, imgs):
+        logger.debug('Setting posted')
         for img in imgs:
             img_id = img[0]
             self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 1 WHERE  id = '+str(img[0])+';')
         self.connection.commit()
 
     def get_img_for_type(self, post_type):
+
         post = None
         if post_type == "new":
             posts = self.cursor.execute('select * from '+self.prefix+'_images where posted = 0').fetchall()

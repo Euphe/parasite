@@ -21,13 +21,9 @@ uri_name_ptrn = re.compile(r'\w+\.[a-z]+$')
 import logging
 logger = logging.getLogger('parasite_logger')
 import pytz
-def utc_to_local(utc_dt, tz):
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(tz)
-    return tz.normalize(local_dt) 
 
-def local_time(utc_dt, tz):
-    return utc_to_local(utc_dt, tz)
-
+import socket
+socket.setdefaulttimeout(30)
 
 class Collector():
     def __init__(self, username, password, app_client_id, app_secret,imgur_client_id,imgur_secret,target_subreddits,target_category,target_amount,pics_path, timezone, keeper = None):
@@ -63,7 +59,6 @@ class Collector():
     def download_photo(self, img_url, filename):
         return urlretrieve(img_url, filename)
 
-
     def collect(self):
         posts = []
         for rsub in self.target_subreddits:
@@ -93,7 +88,7 @@ class Collector():
                 post.url, name = self.get_url_and_name(post.url)
                 path = self.pics_path + name
                 if self.keeper:
-                    self.keeper.add_image([(None, local_time(datetime.datetime.utcnow(), self.timezone), post.url, path)])
+                    self.keeper.add_image([(None, datetime.datetime.utcnow(), post.url, path)])
                 image = self.download_photo(post.url, path)
 
             except Exception as e:

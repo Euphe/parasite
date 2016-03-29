@@ -15,7 +15,6 @@ import traceback
 import sys
 import pytz
 from logging.handlers import TimedRotatingFileHandler
-
 def do_every(period,f,*args):
     def g_tick():
         t = time.time()
@@ -28,17 +27,11 @@ def do_every(period,f,*args):
         time.sleep(next(g))
         f(*args)
 
-def utc_to_local(utc_dt, tz):
-    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(tz)
-    return tz.normalize(local_dt) 
-
-def local_time(utc_dt, tz):
-    return utc_to_local(utc_dt, tz)
 
 modes = ("collect_only", "default")
 class Parasite():
     timezone = pytz.timezone('Europe/Moscow')
-    main_loop_period = 60
+    main_loop_period = 30
     mode = "default"
     collection_time = ("01","00")
 
@@ -119,22 +112,24 @@ class Parasite():
 
     @upcoming.setter
     def upcoming(self, value):
-        if value:
-            logger.debug("Upcoming set to %s", str(value[1]))
-        else:
-            logger.debug("Upcoming set to None")
+        value = list(value)
+        value[1] = value[1]
+        logger.debug("Upcoming set to %s", str(value))
         self._upcoming = value
 
     def post_upcoming(self):
+        logger.debug("Posting upcoming")
         img = self.keeper.get_image(self.upcoming[2])
         self.submitter.post_image(img)
         self.keeper.remove_from_schedule(self.upcoming)
 
     def tick(self):
-        now = local_time(datetime.utcnow(), self.timezone)
-        today = local_time(datetime(now.year, now.month, now.day), self.timezone)
+        logger.debug("Calculating dates")
+        now = datetime.utcnow()
+        today = datetime(now.year, now.month, now.day)
         collection_datetime = today + timedelta(hours=int(self.collection_time[0]), minutes=int(self.collection_time[1]))
         #print(self.force_collection)
+        logger.debug("Calculated dates")
         if self.force_collection or (now >= collection_datetime and abs(collection_datetime - now) <= timedelta(minutes=5) and abs(self.last_collected - now) >= timedelta(minutes=5) ):
 
             if self.force_collection:
@@ -146,30 +141,32 @@ class Parasite():
             logger.debug("Dumped schedule")
             logger.debug("Collecting")
             self.collector.collect()
-            self.last_collected = local_time(datetime.utcnow(), self.timezone)
+            self.last_collected = datetime.utcnow()
             self.waiting_for_collection = False
             if self.mode != 'collect_only':
                 logger.debug("Constructing schedule")
                 self.scheduler.construct_schedule()
                 self.upcoming = self.keeper.get_upcoming_post()
                 logger.debug("Upcoming post %s", str(self.upcoming))
-                logger.debug("Local at %s", str(local_time(self.upcoming[1], self.timezone)))
+                logger.debug("Local at %s", str(self.upcoming[1]))
             logger.debug("Finished collection")
         if not self.waiting_for_collection:
             if self.mode != 'collect_only':
-                self.upcoming = self.keeper.get_upcoming_post()
+                if not self.upcoming:
+                    logger.debug('Getting new upcoming post')
+                    self.upcoming = self.keeper.get_upcoming_post()
                 if not self.upcoming:
                     self.waiting_for_collection = True
                     logger.debug('Out of posts, waiting for collection.')
                 else:
-                    if now >= local_time(self.upcoming[1], self.timezone) and abs(local_time(self.upcoming[1], self.timezone)  - now) <= timedelta(minutes=5):
+                    if now >= self.upcoming[1] and abs(self.upcoming[1]  - now) <= timedelta(minutes=5):
                         if abs(self.last_posted - now) <= timedelta(minutes=10):
                             raise(Exception('Posting too fast! Might get banned!'))
                         logger.debug("Posting time %s", str(self.upcoming[1]))
-                        logger.debug("Posting upcoming")
+                        
                         self.post_upcoming()
-                        self.last_posted = local_time(datetime.utcnow(), self.timezone)
-                        self.upcoming = self.keeper.get_upcoming_post()
+                        self.last_posted = datetime.utcnow()
+                        #self.upcoming = self.keeper.get_upcoming_post()
 
     def clean_up(self):
         logger.debug("Cleaning up")
@@ -215,9 +212,6 @@ console.setFormatter(formatter)
 fh.setFormatter(formatter)
 logger.addHandler(console)
 logger.addHandler(fh)
-
-
-
 
 if __name__ == "__main__":
     parasite = Parasite()
