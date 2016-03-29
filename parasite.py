@@ -161,12 +161,9 @@ class Parasite():
                         self.waiting_for_collection = True
                         logger.debug('Out of posts, waiting for collection.')
 
-                if self.upcoming and now >= self.upcoming[1] and abs(self.upcoming[1]  - now) <= timedelta(minutes=5):
+                if self.upcoming and now >= self.upcoming[1] and abs(self.upcoming[1]  - now) <= timedelta(minutes=5) and abs(self.last_posted - now) >= timedelta(minutes=5):
                     logger.debug("Posting time %s", str(self.upcoming[1]))
                     logger.debug('Last posted %s', str(self.last_posted))
-                    if abs(self.last_posted - now) >= timedelta(minutes=5):
-                        raise(Exception('Posting too fast! Might get banned!'))
-
                     self.post_upcoming()
                     self.last_posted = utc_time_to_russian(datetime.utcnow())
                     self.upcoming = None
