@@ -101,8 +101,8 @@ class Parasite():
 
         self.waiting_for_collection = False
 
-        self.last_collected = datetime(MINYEAR,1,1,1,1,1) 
-        self.last_posted = datetime(MINYEAR,1,1,1,1,1) 
+        self.last_collected = datetime.utcnow(MINYEAR,1,1,1,1,1)
+        self.last_posted = datetime.utcnow(MINYEAR,1,1,1,1,1)
 
         self.force_collection = False
 
@@ -142,7 +142,7 @@ class Parasite():
             logger.debug("Dumped schedule")
             logger.debug("Collecting")
             self.collector.collect()
-            self.last_collected = datetime.utcnow()
+            self.last_collected = utc_time_to_russian(datetime.utcnow())
             self.waiting_for_collection = False
             if self.mode != 'collect_only':
                 logger.debug("Constructing schedule")
@@ -166,7 +166,7 @@ class Parasite():
                         logger.debug("Posting time %s", str(self.upcoming[1]))
                         
                         self.post_upcoming()
-                        self.last_posted = datetime.utcnow()
+                        self.last_posted = utc_time_to_russian(datetime.utcnow())
                         #self.upcoming = self.keeper.get_upcoming_post()
 
     def clean_up(self):
