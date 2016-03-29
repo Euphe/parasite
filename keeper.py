@@ -72,7 +72,11 @@ class Keeper():
     def get_upcoming_post(self):
         sql = 'select * from '+self.prefix+'_schedule WHERE datetime(date) > datetime(\''+utc_time_to_russian(datetime.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")+'\') ORDER BY datetime(date)  ASC LIMIT 1 ;'
         logger.debug('SQL: %s', sql)
-        return self.cursor.execute(sql).fetchone()
+
+        post = self.cursor.execute(sql).fetchone()
+        if not post:
+            raise(Exception("No upcoming post"))
+        return post
 
     def get_pool(self, post_type):
         logger.debug('Getting pools')

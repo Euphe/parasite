@@ -155,19 +155,21 @@ class Parasite():
             if self.mode != 'collect_only':
                 if not self.upcoming:
                     logger.debug('Getting new upcoming post')
-                    self.upcoming = self.keeper.get_upcoming_post()
-                if not self.upcoming:
-                    self.waiting_for_collection = True
-                    logger.debug('Out of posts, waiting for collection.')
-                else:
-                    if now >= self.upcoming[1] and abs(self.upcoming[1]  - now) <= timedelta(minutes=5):
-                        if abs(self.last_posted - now) <= timedelta(minutes=10):
-                            raise(Exception('Posting too fast! Might get banned!'))
-                        logger.debug("Posting time %s", str(self.upcoming[1]))
-                        
-                        self.post_upcoming()
-                        self.last_posted = utc_time_to_russian(datetime.utcnow())
-                        #self.upcoming = self.keeper.get_upcoming_post()
+                    try:
+                        self.upcoming = self.keeper.get_upcoming_post()
+                    except:
+                        self.waiting_for_collection = True
+                        logger.debug('Out of posts, waiting for collection.')
+
+                if self.upcoming and now >= self.upcoming[1] and abs(self.upcoming[1]  - now) <= timedelta(minutes=5):
+                    logger.debug("Posting time %s", str(self.upcoming[1]))
+                    logger.debug('Last posted %s', str(self.last_posted))
+                    if abs(self.last_posted - now) >= timedelta(minutes=5):
+                        raise(Exception('Posting too fast! Might get banned!'))
+
+                    self.post_upcoming()
+                    self.last_posted = utc_time_to_russian(datetime.utcnow())
+                    self.upcoming = None
 
     def clean_up(self):
         logger.debug("Cleaning up")
