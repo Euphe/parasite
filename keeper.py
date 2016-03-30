@@ -28,6 +28,7 @@ class Keeper():
         self.cursor.executemany("INSERT INTO "+self.prefix+"_images VALUES (?, ?, ?, ?, 0)", values)
         self.connection.commit()
 
+
     def get_image(self, img_id):
         logger.debug('Getting img')
         return self.cursor.execute('select * from '+self.prefix+'_images WHERE id = '+str(img_id)).fetchone()
@@ -47,6 +48,15 @@ class Keeper():
 
         self.connection.commit()
 
+    def delete_old_posts(self, amount):
+        logger.debug('Deleting %d old posts', amount)
+
+        paths = self.cursor.execute('''SELECT path FROM '''+self.prefix+'''_images WHERE posted = 1 ORDER BY id DESC LIMIT '''+str(amount)+''';''').fetchall()
+        self.cursor.execute('''DELETE FROM '''+self.prefix+'''_images WHERE id IN (SELECT id FROM '''+self.prefix+'''_images WHERE posted = 1 ORDER BY id DESC LIMIT '''+str(amount)+''');''')
+        self.connection.commit()
+        logger.debug("Deleted old posts from db")
+        print(str(paths))
+        return [path[0] for path in paths]
 
     def store_schedule(self, schedule):
         logger.debug('Storing schedule')

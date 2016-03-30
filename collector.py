@@ -70,10 +70,12 @@ class Collector():
 
         #filter out bad posts
         #we are only looking for posts with images or links, score over 0
-        posts = [ post for post in posts if post.score > self.post_rules["minimal score"] and post.over_18 == (self.post_rules["over 18"] if self.post_rules["over 18"] != "Any" else post.over_18) ].sorted(key=lambda post:post.score, reverse=True)
+        posts = sorted([ post for post in posts if post.score > self.post_rules["minimal score"] and post.over_18 == (self.post_rules["over 18"] if self.post_rules["over 18"] != "Any" else post.over_18) ], key=lambda post:post.score, reverse=True)
 
 
-        return self.store(posts)
+        posts, successes, failures = self.store(posts)
+
+        self.remove_old_posts(successes)
 
     def get_url_and_name(self, uri):
         try:
@@ -107,4 +109,11 @@ class Collector():
                 logger.debug('Failed to download pic')
                 failures+=1
         logger.debug('Storing complete:\n%d sucessful\n%d failed', successes, failures)
-        return posts
+        return posts, successes, failures
+
+    def remove_old_posts(self, amount):
+        paths = self.keeper.delete_old_posts(amount)
+        logger.debug("Removing files from system")
+        for path in paths:
+            os.remove(path)
+        logger.debug("Removed files from system")
