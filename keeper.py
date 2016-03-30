@@ -8,15 +8,6 @@ import pytz
 import logging
 from util import utc_time_to_russian
 logger = logging.getLogger('parasite_logger')
-
-class Blob:
-    """Automatically encode a binary string."""
-    def __init__(self, s):
-        self.s = s
-
-    def _quote(self):
-        return "'%s'" % sqlite3.Binary(self.s)
-
 class Keeper():
     def __init__(self, timezone, prefix = "default"):
         self.prefix = prefix
@@ -76,6 +67,7 @@ class Keeper():
         post = self.cursor.execute(sql).fetchone()
         if not post:
             raise(Exception("No upcoming post"))
+        logger.debug('Fetched upcoming post: %s', str(post) )
         return post
 
     def get_pool(self, post_type):
@@ -91,20 +83,6 @@ class Keeper():
             img_id = img[0]
             self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 1 WHERE  id = '+str(img[0])+';')
         self.connection.commit()
-
-    def get_img_for_type(self, post_type):
-
-        post = None
-        if post_type == "new":
-            posts = self.cursor.execute('select * from '+self.prefix+'_images where posted = 0').fetchall()
-        elif post_type == "old":
-            posts = self.cursor.execute('select * from '+self.prefix+'_images where posted = 1').fetchall()
-
-        if posts:
-            post = random.choice(posts)
-            self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 1 WHERE  id = '+str(post[0])+';')
-            self.connection.commit()
-        return post
 
     def clean_up(self):
         self.connection.close()

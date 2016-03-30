@@ -81,7 +81,12 @@ class Parasite():
     # total new: 8
 
     def __init__(self):
+
         self.target_subreddits = ["Funnypics", "Daily_Funny_Pics"]
+        self.post_rules = {
+        	"minimal score": 1, #int
+        	"over 18": False, #False, True, "Any"
+        }
         self.target_category = "hot"
         self.target_amount = 30
         self.pics_path = 'pics/'
@@ -92,7 +97,7 @@ class Parasite():
 
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
 
-        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.target_subreddits,self.target_category,self.target_amount,self.pics_path, self.timezone,  keeper = self.keeper)
+        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.target_subreddits,self.target_category,self.target_amount,self.pics_path, self.timezone, self.post_rules,  keeper = self.keeper)
 
         self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password)
 
@@ -125,12 +130,12 @@ class Parasite():
         self.keeper.remove_from_schedule(self.upcoming)
 
     def tick(self):
-        logger.debug("Calculating dates")
+        #logger.debug("Calculating dates")
         now = utc_time_to_russian(datetime.utcnow())
         today = datetime(now.year, now.month, now.day)
         collection_datetime = today + timedelta(hours=int(self.collection_time[0]), minutes=int(self.collection_time[1]))
         #print(self.force_collection)
-        logger.debug("Calculated dates")
+        #logger.debug("Calculated dates")
         if self.force_collection or (now >= collection_datetime and abs(collection_datetime - now) <= timedelta(minutes=5) and abs(self.last_collected - now) >= timedelta(minutes=5) ):
 
             if self.force_collection:
@@ -147,9 +152,7 @@ class Parasite():
             if self.mode != 'collect_only':
                 logger.debug("Constructing schedule")
                 self.scheduler.construct_schedule()
-                self.upcoming = self.keeper.get_upcoming_post()
-                logger.debug("Upcoming post %s", str(self.upcoming))
-                logger.debug("Local at %s", str(self.upcoming[1]))
+
             logger.debug("Finished collection")
         if not self.waiting_for_collection:
             if self.mode != 'collect_only':
@@ -157,6 +160,8 @@ class Parasite():
                     logger.debug('Getting new upcoming post')
                     try:
                         self.upcoming = self.keeper.get_upcoming_post()
+                        logger.debug("Upcoming post %s", str(self.upcoming))
+                        logger.debug("Local at %s", str(self.upcoming[1]))
                     except:
                         self.waiting_for_collection = True
                         logger.debug('Out of posts, waiting for collection.')
