@@ -217,7 +217,7 @@ class Parasite():
         
         self.main_loop()
 
-abs_path = os.path.abspath(__file__)
+abs_path = os.path.dirname(os.path.realpath(sys.argv[0]))
 log_path = abs_path+"/logs/log"
 if not os.path.exists(abs_path+"/logs"):
     os.makedirs(abs_path+"/logs")
