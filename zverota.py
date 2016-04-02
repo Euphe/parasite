@@ -2,14 +2,13 @@ import parasite
 import sys
 
 if __name__ == "__main__":
-    parasite = Parasite()
     bot = parasite.Parasite()
 
     bot.schedule = [
             ("8:30", "new"),
             ("9:00", "new"),
             ("10:30", "new"),
-            
+
             ("12:15", "new"),
             ("13:30", "new"),
             ("14:45", "new"),
