@@ -107,6 +107,12 @@ class Parasite():
         self.pics_path = 'pics/'
         self.prefix = "funny"
 
+        self._upcoming = None
+        self.waiting_for_collection = False
+        self.last_collected = datetime(MINYEAR,1,1,1,1,1)
+        self.last_posted = datetime(MINYEAR,1,1,1,1,1)
+        self.force_collection = False 
+
 
 
 
@@ -203,20 +209,10 @@ class Parasite():
             os.makedirs(self.pics_path.split('/')[0])
 
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
-
         self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.targets ,self.pics_path, self.timezone, keeper = self.keeper)
-
         self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password)
-
         self.scheduler = scheduler.Scheduler(self.keeper, self.timezone, self.schedule)
-        self._upcoming = None
 
-        self.waiting_for_collection = False
-
-        self.last_collected = datetime(MINYEAR,1,1,1,1,1)
-        self.last_posted = datetime(MINYEAR,1,1,1,1,1) 
-
-        self.force_collection = False
         
         self.main_loop()
 
