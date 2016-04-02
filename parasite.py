@@ -32,7 +32,7 @@ def do_every(period,f,*args):
 modes = ("collect_only", "default")
 class Parasite():
     timezone = pytz.timezone('Europe/Moscow')
-    main_loop_period = 30
+    main_loop_period = 45
     mode = "default"
     collection_time = ("01","00")
 
@@ -45,7 +45,6 @@ class Parasite():
 
     vk_app_id = "5380535"
     vk_secret_key = "ACMuuAwx0p4jj2yGmtzH"
-    vk_group_id = "118173804"
     vk_user_login = "kururugisuzakueuphe@ya.ru"
     vk_user_password = "угзруьшф"
 
@@ -106,6 +105,8 @@ class Parasite():
         ]
         self.pics_path = 'pics/'
         self.prefix = "funny"
+
+        self.vk_group_id = "118173804"
 
         self._upcoming = None
         self.waiting_for_collection = False
