@@ -5,6 +5,25 @@ if __name__ == "__main__":
     parasite = Parasite()
     bot = parasite.Parasite()
 
+    bot.schedule = [
+            ("8:30", "new"),
+            ("9:00", "new"),
+            ("10:30", "new"),
+            
+            ("12:15", "new"),
+            ("13:30", "new"),
+            ("14:45", "new"),
+
+            ("16:00", "new"),
+            ("17:00", "new"),
+            ("18:00", "new"),
+            ("19:00", "new"),
+
+            ("21:35", "new"),
+            ("22:05", "new"),
+            ("23:00", "new"),
+        ]
+
     bot.targets = [
                 {
                     "subreddit": "aww",
