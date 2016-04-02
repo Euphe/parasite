@@ -49,38 +49,41 @@ class Parasite():
     vk_user_login = "kururugisuzakueuphe@ya.ru"
     vk_user_password = "угзруьшф"
 
-    schedule = [
-        ("8:30", "old"),
-
-        ("9:00", "new"),
-
-        ("10:30", "new"),
-
-        ("12:15", "new"),
-
-        ("13:30", "new"),
-
-        ("14:45", "old"),
-
-        ("16:00", "new"),
-
-        ("17:00", "old"),
-
-        ("18:00", "new"),
-
-        ("19:00", "new"),
-
-        ("21:35", "new"),
-
-        ("22:05", "old"),
-
-        ("23:00", "old"),
-    ]
+    
 
     # total old: 5
     # total new: 8
 
     def __init__(self):
+
+        self.schedule = [
+            ("8:30", "old"),
+
+            ("9:00", "new"),
+
+            ("10:30", "new"),
+
+            ("12:15", "new"),
+
+            ("13:30", "new"),
+
+            ("14:45", "old"),
+
+            ("16:00", "new"),
+
+            ("17:00", "old"),
+
+            ("18:00", "new"),
+
+            ("19:00", "new"),
+
+            ("21:35", "new"),
+
+            ("22:05", "old"),
+
+            ("23:00", "old"),
+        ]
+        
         self.targets = [
             {
                 "subreddit": "Funnypics",
