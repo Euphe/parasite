@@ -11,7 +11,7 @@ logger = logging.getLogger('parasite_logger')
 class Keeper():
     def __init__(self, timezone, prefix = "default"):
         self.prefix = prefix
-        self.connection = sqlite3.connect('parasite.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        self.connection = sqlite3.connect(self.prefix+'_pics.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
         self.cursor = self.connection.cursor()
         self.init_schema()
         self.timezone = timezone

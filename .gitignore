@@ -64,5 +64,6 @@ target/
 *.jpg
 *.png
 pics/*
+*_pics*
 *log*
 *.db*

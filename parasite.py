@@ -81,14 +81,26 @@ class Parasite():
     # total new: 8
 
     def __init__(self):
-
-        self.target_subreddits = ["Funnypics", "Daily_Funny_Pics"]
-        self.post_rules = {
-        	"minimal score": 1, #int
-        	"over 18": False, #False, True, "Any"
-        }
-        self.target_category = "hot"
-        self.target_amount = 30
+        self.targets = [
+            {
+                "subreddit": "Funnypics",
+                "category": "hot",
+                "post_rules": {
+                    "minimal score": 1, #int
+                    "over 18": False, #False, True, "Any"
+                },
+                "target_amount": 30
+            },
+            {
+                "subreddit": "Daily_Funny_Pics",
+                "category": "hot",
+                "post_rules": {
+                    "minimal score": 1, #int
+                    "over 18": False, #False, True, "Any"
+                },
+                "target_amount": 30
+            },
+        ]
         self.pics_path = 'pics/'
         self.prefix = "funny"
 
@@ -97,7 +109,7 @@ class Parasite():
 
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
 
-        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.target_subreddits,self.target_category,self.target_amount,self.pics_path, self.timezone, self.post_rules,  keeper = self.keeper)
+        self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.targets ,self.pics_path, self.timezone, keeper = self.keeper)
 
         self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password)
 
@@ -211,7 +223,7 @@ logger.setLevel(logging.DEBUG)
 fh = TimedRotatingFileHandler(log_path, when="d", interval = 1, backupCount = 10)
 fh.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
-console.setLevel(logging.ERROR)
+console.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s|%(name)s|%(levelname)s|%(message)s')
 console.setFormatter(formatter)
 fh.setFormatter(formatter)

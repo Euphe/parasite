@@ -27,7 +27,7 @@ socket.setdefaulttimeout(30)
 
 from util import utc_time_to_russian
 class Collector():
-    def __init__(self, username, password, app_client_id, app_secret,imgur_client_id,imgur_secret,target_subreddits,target_category,target_amount,pics_path, timezone, post_rules, keeper = None):
+    def __init__(self, username, password, app_client_id, app_secret,imgur_client_id,imgur_secret,targets,pics_path, timezone, keeper = None):
         self.username = username
         self.password = password
         self.app_client_id = app_client_id
@@ -35,12 +35,8 @@ class Collector():
         self.imgur_client_id = imgur_client_id
         self.imgur_secret = imgur_secret
         self.timezone = timezone
-        self.target_subreddits = target_subreddits
-        self.target_category = target_category
-        self.target_amount = target_amount
+        self.targets = targets
         self.pics_path = pics_path
-        self.post_rules = post_rules
-
 
         self.r = praw.Reddit(user_agent='collector_learn')
 
@@ -61,21 +57,35 @@ class Collector():
     def download_photo(self, img_url, filename):
         return urlretrieve(img_url, filename)
 
+    def filter_by_post_rules(self, posts, post_rules):
+        return [ post for post in posts if post.score > post_rules["minimal score"] and post.over_18 == (post_rules["over 18"] if post_rules["over 18"] != "Any" else post.over_18) ]
+
     def collect(self):
         posts = []
-        for rsub in self.target_subreddits:
+        for target in self.targets:
+            logger.debug("Collecting target: %s",str(target))
+            rsub = target["subreddit"]
+            post_rules = target["post_rules"]
+            category = target["category"]
+            target_amount = target["target_amount"]
+
             sub = self.r.get_subreddit(rsub)
-            if self.target_category == "hot":
-                posts = posts + list(sub.get_hot(limit=self.target_amount*3))
 
-        #filter out bad posts
-        #we are only looking for posts with images or links, score over 0
-        posts = sorted([ post for post in posts if post.score > self.post_rules["minimal score"] and post.over_18 == (self.post_rules["over 18"] if self.post_rules["over 18"] != "Any" else post.over_18) ], key=lambda post:post.score, reverse=True)
+            #filter out bad posts
+            if category == "hot":
+                posts = posts + self.filter_by_post_rules(list(sub.get_hot(limit=target_amount*3)), post_rules)
+            elif category == "new":
+                posts = posts + self.filter_by_post_rules(list(sub.get_new(limit=target_amount*3)), post_rules)
+            else:
+                raise(Exception("Unknown reddit category"))
+
+            
+            posts = sorted(posts, key=lambda post:post.score, reverse=True)
 
 
-        posts, successes, failures = self.store(posts)
+            posts, successes, failures = self.store(posts, target_amount)
 
-        self.remove_old_posts(successes)
+            self.remove_old_posts(successes)
 
     def get_url_and_name(self, uri):
         try:
@@ -89,7 +99,7 @@ class Collector():
             else:
                 raise(Exception('Unknown website:' + uri))
 
-    def store(self, posts):
+    def store(self, posts, target_amount):
         logger.debug('Collector:storing posts')
         failures = 0
         successes = 0
@@ -102,7 +112,7 @@ class Collector():
                 image = self.download_photo(post.url, path)
                 logger.debug("Collected %s", post.url)
                 successes+=1
-                if successes >= self.target_amount:
+                if successes >= target_amount:
                     break
             except Exception as e:
                 logger.exception(e)
