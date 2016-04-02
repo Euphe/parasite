@@ -101,6 +101,7 @@ class Collector():
 
     def store(self, posts, target_amount):
         logger.debug('Collector:storing posts')
+        #abs_path = os.path.abspath(__file__)
         failures = 0
         successes = 0
         for post in posts:

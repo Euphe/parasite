@@ -206,8 +206,8 @@ class Parasite():
         atexit.register(self.clean_up)
 
 
-        if not os.path.exists(self.pics_path.split('/')[0]):
-            os.makedirs(self.pics_path.split('/')[0])
+        if not os.path.exists(abs_path+"/"+self.pics_path.split('/')[0]):
+            os.makedirs(abs_path+"/"+self.pics_path.split('/')[0])
 
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
         self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.targets ,self.pics_path, self.timezone, keeper = self.keeper)
@@ -217,10 +217,11 @@ class Parasite():
         
         self.main_loop()
 
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+abs_path = os.path.abspath(__file__)
+log_path = abs_path+"/logs/log"
+if not os.path.exists(abs_path+"/logs"):
+    os.makedirs(abs_path+"/logs")
 
-log_path = './logs/log'
 logger = logging.getLogger('parasite_logger')
 logger.setLevel(logging.DEBUG)
 
