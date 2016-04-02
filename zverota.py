@@ -53,4 +53,5 @@ if __name__ == "__main__":
                 },
     ]
     bot.prefix = "zverota"
+    bot.vk_group_id = "118675037"
     bot.start(sys.argv[1:])
