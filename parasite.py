@@ -36,9 +36,9 @@ logger = None
 
 class Parasite():
     timezone = pytz.timezone('Europe/Moscow')
-    main_loop_period = 45
+    main_loop_period = 30
     mode = "default"
-    collection_time = ("01","00")
+
 
     reddit_username = 'Euphetar'
     reddit_password = 'euphemia'
@@ -58,7 +58,7 @@ class Parasite():
     # total new: 8
 
     def __init__(self):
-
+        self.collection_time = ("01","00")
         self.schedule = [
             ("8:30", "old"),
 
