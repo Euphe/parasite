@@ -128,7 +128,8 @@ class Parasite():
 
     @upcoming.setter
     def upcoming(self, value):
-        value = list(value)
+        if value:
+            value = list(value)
         logger.debug("Upcoming set to %s", str(value))
         self._upcoming = value
 
@@ -180,7 +181,7 @@ class Parasite():
                     logger.debug('Last posted %s', str(self.last_posted))
                     self.post_upcoming()
                     self.last_posted = utc_time_to_russian(datetime.utcnow())
-                    self.upcoming = []
+                    self.upcoming = None
 
     def clean_up(self):
         logger.debug("Cleaning up")
