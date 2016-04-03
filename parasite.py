@@ -108,7 +108,7 @@ class Parasite():
             },
         ]
         self.pics_path = abs_path+'/pics/'
-        self.log_path = abs_path+'/logs/log'
+        self.log_path = abs_path+'/logs/'
         self.prefix = "funny"
 
         self.vk_group_id = "118173804"
@@ -208,15 +208,16 @@ class Parasite():
                 self.force_collection = True
 
         atexit.register(self.clean_up)
-
-        if not os.path.exists( os.path.dirname(self.log_path) ):
-            os.makedirs( os.path.dirname(self.log_path).split('/')[0] )
-
         global logger
         logger = logging.getLogger('parasite_logger')
         logger.setLevel(logging.DEBUG)
 
-        fh = TimedRotatingFileHandler(self.log_path, when="d", interval = 1, backupCount = 10)
+
+
+        if not os.path.exists( os.path.dirname(self.log_path) ):
+            os.makedirs( self.log_path)
+
+        fh = TimedRotatingFileHandler(self.log_path+"/log", when="d", interval = 1, backupCount = 10)
         fh.setLevel(logging.DEBUG)
         console = logging.StreamHandler()
         console.setLevel(logging.DEBUG)
@@ -227,8 +228,11 @@ class Parasite():
         logger.addHandler(fh)
 
         if not os.path.exists(self.pics_path):
-            os.makedirs(self.pics_path.split('/')[0])
+            os.makedirs(self.pics_path)
 
+        logger.debug(self.log_path)
+        logger.debug(self.pics_path)
+        
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
         self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.targets ,self.pics_path, self.timezone, keeper = self.keeper)
         self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password)
