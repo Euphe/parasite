@@ -29,8 +29,14 @@ class Submitter():
         upload_url = upload_server["upload_url"]
         path = img[3]
         name= path.split("/")[-1]
-        with open(path, 'rb') as f:
-            r = requests.post(upload_url, files={"photo": f})
+        try:
+            with open(path, 'rb') as f:
+                r = requests.post(upload_url, files={"photo": f})
+        except IOError as e:
+            logger.exception(e)
+            logger.debug("Picture file not found, img: %s", img)
+            return None
+            
         json = r.json()
         save_data = self.api.photos.saveWallPhoto(group_id=self.group_id,photo=json["photo"],server=json["server"],hash=json["hash"] )[0]
         
