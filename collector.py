@@ -116,8 +116,8 @@ class Collector():
                 if successes >= target_amount:
                     break
             except Exception as e:
-                logger.exception(e)
-                logger.debug('Failed to download pic')
+                logger.debug(str(e))
+                #logger.debug('Failed to download pic')
                 failures+=1
         logger.debug('Storing complete:\n%d sucessful\n%d failed', successes, failures)
         return posts, successes, failures

@@ -28,6 +28,7 @@ class Submitter():
         upload_server = self.api.photos.getWallUploadServer(group_id=self.group_id)
         upload_url = upload_server["upload_url"]
         path = img[3]
+        link = img[2]
         name= path.split("/")[-1]
         try:
             with open(path, 'rb') as f:

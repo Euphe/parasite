@@ -36,7 +36,7 @@ logger = None
 
 class Parasite():
     timezone = pytz.timezone('Europe/Moscow')
-    main_loop_period = 45
+    main_loop_period = 30
     mode = "default"
     collection_time = ("01","00")
 
@@ -133,10 +133,14 @@ class Parasite():
         self._upcoming = value
 
     def post_upcoming(self):
-        logger.debug("Posting upcoming")
-        img = self.keeper.get_image(self.upcoming[2])
-        self.submitter.post_image(img)
-        self.keeper.remove_from_schedule(self.upcoming)
+        logger.debug("Posting upcoming %s", str(self.upcoming))
+        try:
+            img = self.keeper.get_image(self.upcoming[2])
+            self.submitter.post_image(img)
+            self.keeper.remove_from_schedule(self.upcoming)
+        except Exception as e:
+            logger.exception(e)
+            logger.debug('Error when posting img %s', str(img))
 
     def tick(self):
         #logger.debug("Calculating dates")
