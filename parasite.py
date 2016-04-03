@@ -30,6 +30,10 @@ def do_every(period,f,*args):
 
 
 modes = ("collect_only", "default")
+abs_path = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+logger = None
+
 class Parasite():
     timezone = pytz.timezone('Europe/Moscow')
     main_loop_period = 45
@@ -103,7 +107,8 @@ class Parasite():
                 "target_amount": 30
             },
         ]
-        self.pics_path = 'pics/'
+        self.pics_path = abs_path+'/pics/'
+        self.log_path = abs_path+'/logs/log'
         self.prefix = "funny"
 
         self.vk_group_id = "118173804"
@@ -124,7 +129,6 @@ class Parasite():
     @upcoming.setter
     def upcoming(self, value):
         value = list(value)
-        value[1] = value[1]
         logger.debug("Upcoming set to %s", str(value))
         self._upcoming = value
 
@@ -176,7 +180,7 @@ class Parasite():
                     logger.debug('Last posted %s', str(self.last_posted))
                     self.post_upcoming()
                     self.last_posted = utc_time_to_russian(datetime.utcnow())
-                    self.upcoming = None
+                    self.upcoming = []
 
     def clean_up(self):
         logger.debug("Cleaning up")
@@ -205,9 +209,25 @@ class Parasite():
 
         atexit.register(self.clean_up)
 
+        if not os.path.exists( os.path.dirname(self.log_path) ):
+            os.makedirs( os.path.dirname(self.log_path).split('/')[0] )
 
-        if not os.path.exists(abs_path+"/"+self.pics_path.split('/')[0]):
-            os.makedirs(abs_path+"/"+self.pics_path.split('/')[0])
+        global logger
+        logger = logging.getLogger('parasite_logger')
+        logger.setLevel(logging.DEBUG)
+
+        fh = TimedRotatingFileHandler(self.log_path, when="d", interval = 1, backupCount = 10)
+        fh.setLevel(logging.DEBUG)
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s|%(name)s|%(levelname)s|%(message)s')
+        console.setFormatter(formatter)
+        fh.setFormatter(formatter)
+        logger.addHandler(console)
+        logger.addHandler(fh)
+
+        if not os.path.exists(self.pics_path):
+            os.makedirs(self.pics_path.split('/')[0])
 
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
         self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.targets ,self.pics_path, self.timezone, keeper = self.keeper)
@@ -217,23 +237,7 @@ class Parasite():
         
         self.main_loop()
 
-abs_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-log_path = abs_path+"/logs/log"
-if not os.path.exists(abs_path+"/logs"):
-    os.makedirs(abs_path+"/logs")
 
-logger = logging.getLogger('parasite_logger')
-logger.setLevel(logging.DEBUG)
-
-fh = TimedRotatingFileHandler(log_path, when="d", interval = 1, backupCount = 10)
-fh.setLevel(logging.DEBUG)
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s|%(name)s|%(levelname)s|%(message)s')
-console.setFormatter(formatter)
-fh.setFormatter(formatter)
-logger.addHandler(console)
-logger.addHandler(fh)
 
 if __name__ == "__main__":
     parasite = Parasite()
