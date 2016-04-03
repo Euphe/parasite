@@ -1,6 +1,6 @@
 import parasite
 import sys
-
+import os
 if __name__ == "__main__":
     bot = parasite.Parasite()
 
@@ -53,5 +53,8 @@ if __name__ == "__main__":
                 },
     ]
     bot.prefix = "zverota"
+    abs_path = os.path.dirname(os.path.realpath(sys.argv[0]))
     bot.vk_group_id = "118675037"
+    bot.pics_path = abs_path+'/pics/'
+    bot.log_path = abs_path+'/logs/'
     bot.start(sys.argv[1:])
