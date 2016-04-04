@@ -55,7 +55,7 @@ class Keeper():
         self.cursor.execute('''DELETE FROM '''+self.prefix+'''_images WHERE id IN (SELECT id FROM '''+self.prefix+'''_images WHERE posted = 1 ORDER BY id DESC LIMIT '''+str(amount)+''');''')
         self.connection.commit()
         logger.debug("Deleted old posts from db")
-        print(str(paths))
+        #print(str(paths))
         return [path[0] for path in paths]
 
     def store_schedule(self, schedule):
