@@ -3,24 +3,36 @@ import sys
 import os
 if __name__ == "__main__":
     bot = parasite.Parasite()
-
+    bot.collection_time = ("01", "00")
     bot.schedule = [
+            ("8:00", "new"),
             ("8:30", "new"),
             ("9:00", "new"),
+            ("9:30", "new"),
             ("10:30", "new"),
+            ("11:00", "new"),
 
-            ("12:15", "new"),
-            ("13:30", "new"),
-            ("14:45", "new"),
+            #ads
 
+            ("12:30", "new"),
+            ("13:00", "new"),
+
+            #ads 
+
+            ("15:00", "new"),
             ("16:00", "new"),
             ("17:00", "new"),
             ("18:00", "new"),
             ("19:00", "new"),
 
-            ("21:35", "new"),
-            ("22:05", "new"),
+            #ads
+
+            ("21:00", "new"),
+            ("21:30", "new"),
+            ("22:00", "new"),
+            ("22:30", "new"),
             ("23:00", "new"),
+            ("23:30", "new"),
         ]
 
     bot.targets = [
@@ -31,7 +43,7 @@ if __name__ == "__main__":
                         "minimal score": 100, #int
                         "over 18": False, #False, True, "Any"
                     },
-                    "target_amount": 15
+                    "target_amount": 19
                 },
                 {
                     "subreddit": "aww",
@@ -40,7 +52,7 @@ if __name__ == "__main__":
                         "minimal score": 1, #int
                         "over 18": False, #False, True, "Any"
                     },
-                    "target_amount": 15
+                    "target_amount": 10
                 },
                 {
                     "subreddit": "cute",
