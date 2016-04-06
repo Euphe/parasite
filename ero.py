@@ -46,7 +46,7 @@ if __name__ == "__main__":
                     "subreddit": "RealGirls",
                     "category": "hot",
                     "post_rules": {
-                        "minimal score": 150, #int
+                        "minimal score": 350, #int
                         "over 18": True, #False, True, "Any"
                     },
                     "target_amount": 25
@@ -55,7 +55,7 @@ if __name__ == "__main__":
                     "subreddit": "RealGirls",
                     "category": "new",
                     "post_rules": {
-                        "minimal score": 15, #int
+                        "minimal score": 300, #int
                         "over 18": False, #False, True, "Any"
                     },
                     "target_amount": 8
@@ -67,16 +67,7 @@ if __name__ == "__main__":
                         "minimal score": 150, #int
                         "over 18": False, #False, True, "Any"
                     },
-                    "target_amount": 8
-                },
-                {
-                    "subreddit":"randomsexiness",
-                    "category": "hot",
-                    "post_rules": {
-                        "minimal score": 100, #int
-                        "over 18": False, #False, True, "Any"
-                    },
-                    "target_amount": 8
+                    "target_amount": 15
                 },
 
     ]
