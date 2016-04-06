@@ -78,7 +78,7 @@ class Parasite():
 
             ("18:00", "new"),
 
-            ("19:00", "new"),
+            ("19:00", "poll"),
 
             ("21:35", "new"),
 
@@ -107,6 +107,7 @@ class Parasite():
                 "target_amount": 30
             },
         ]
+        self.polls_question = "Кто милее?"
         self.pics_path = abs_path+'/pics/'
         self.log_path = abs_path+'/logs/'
         self.prefix = "funny"
@@ -118,6 +119,7 @@ class Parasite():
         self.last_collected = datetime(MINYEAR,1,1,1,1,1)
         self.last_posted = datetime(MINYEAR,1,1,1,1,1)
         self.force_collection = False 
+        self.force_schedule_construction = False 
 
 
 
@@ -134,14 +136,9 @@ class Parasite():
         self._upcoming = value
 
     def post_upcoming(self):
-        logger.debug("Posting upcoming %s", str(self.upcoming))
-        try:
-            img = self.keeper.get_image(self.upcoming[2])
-            self.submitter.post_image(img)
-            self.keeper.remove_from_schedule(self.upcoming)
-        except Exception as e:
-            logger.exception(e)
-            logger.debug('Error when posting img %s', str(img))
+        logger.debug("Posting upcoming")
+        self.submitter.post(self.upcoming)
+        self.keeper.remove_from_schedule(self.upcoming)
 
     def tick(self):
         #logger.debug("Calculating dates")
@@ -168,6 +165,10 @@ class Parasite():
                 self.scheduler.construct_schedule()
 
             logger.debug("Finished collection")
+
+        if self.force_schedule_construction:
+            logger.debug("Forced constructing schedule")
+            self.scheduler.construct_schedule()
         if not self.waiting_for_collection:
             if self.mode != 'collect_only':
                 if not self.upcoming:
@@ -197,11 +198,11 @@ class Parasite():
             do_every(self.main_loop_period, self.tick)
         except Exception as e:
             logger.debug("Main loop shut down with exception")
-            logger.exception("message")
+            logger.exception(e)
 
     def start(self,argv):
         try:  
-            opts, args = getopt.getopt(argv, "f", ["force_collection"])
+            opts, args = getopt.getopt(argv, "fc", ["force_collection","force_schedule_construction"])
         except getopt.GetoptError:
             print('invalid params')
             sys.exit(2)   
@@ -211,6 +212,8 @@ class Parasite():
             if opt in ('-f', "--force_collection"):
                 #print('Force collection enabled')
                 self.force_collection = True
+            elif opt in ('-c', "--force_schedule_construction"):
+                self.force_schedule_construction = True
 
         atexit.register(self.clean_up)
         global logger
@@ -240,7 +243,7 @@ class Parasite():
         
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
         self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.targets ,self.pics_path, self.timezone, keeper = self.keeper)
-        self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password)
+        self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password, self.polls_question, keeper = self.keeper)
         self.scheduler = scheduler.Scheduler(self.keeper, self.timezone, self.schedule)
 
         

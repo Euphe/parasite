@@ -8,6 +8,13 @@ import pytz
 import logging
 from util import utc_time_to_russian
 logger = logging.getLogger('parasite_logger')
+
+def parse_schedule_entry(entry):
+    entry = list(entry)
+    entry[2] = entry[2].split(',')
+    return entry
+
+
 class Keeper():
     def __init__(self, timezone, prefix = "default"):
         self.prefix = prefix
@@ -19,7 +26,7 @@ class Keeper():
     def init_schema(self):    
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS '''+self.prefix+'''_images(id INTEGER  PRIMARY KEY, date timestamp, link text UNIQUE, path text UNIQUE, posted INTEGER)''')
 
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS '''+self.prefix+'''_schedule(id INTEGER  PRIMARY KEY, date timestamp, image_id INTEGER, post_type text)''')
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS '''+self.prefix+'''_schedule(id INTEGER  PRIMARY KEY, date timestamp, image_ids text, post_type text)''')
 
         self.connection.commit()
 
@@ -38,10 +45,10 @@ class Keeper():
 
     def dump_schedule(self):
         logger.debug('Dumping schedule')
-        schedule = self.cursor.execute('select * from '+self.prefix+'_schedule WHERE post_type = \'new\';').fetchmany()
-        for post in schedule:
-            img_id = post[2]
-            self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 0 WHERE  id = '+str(img_id)+';')
+        #schedule = self.cursor.execute('select * from '+self.prefix+'_schedule WHERE post_type = \'new\';').fetchmany()
+        #for post in schedule:
+        #    img_id = post[2]
+        #    self.cursor.execute('UPDATE '+self.prefix+'_images SET posted = 0 WHERE  id = '+str(img_id)+';')
 
         self.cursor.execute('''DELETE FROM '''+self.prefix+'''_schedule;''')
         self.cursor.execute('''VACUUM;''')
@@ -60,7 +67,11 @@ class Keeper():
 
     def store_schedule(self, schedule):
         logger.debug('Storing schedule')
-        values = schedule
+        values = list(schedule)
+        for i in range(len(values)):
+            values[i] = list(values[i])
+            values[i][1] = ",".join([str(x) for x in values[i][1]])
+        print(values)
         self.cursor.executemany("INSERT INTO "+self.prefix+"_schedule VALUES (Null, ?, ?, ?)", values)
         self.connection.commit()
 
@@ -78,7 +89,7 @@ class Keeper():
         if not post:
             raise(Exception("No upcoming post"))
         logger.debug('Fetched upcoming post: %s', str(post) )
-        return post
+        return parse_schedule_entry(post)
 
     def get_pool(self, post_type):
         logger.debug('Getting pools')
