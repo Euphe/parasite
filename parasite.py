@@ -177,7 +177,8 @@ class Parasite():
                         self.upcoming = self.keeper.get_upcoming_post()
                         logger.debug("Upcoming post %s", str(self.upcoming))
                         logger.debug("Local at %s", str(self.upcoming[1]))
-                    except:
+                    except Exception as e:
+                        logger.debug("Caught exception %s", str(e))
                         self.waiting_for_collection = True
                         logger.debug('Out of posts, waiting for collection.')
 
