@@ -85,6 +85,8 @@ class Parasite():
             ("22:05", "old"),
 
             ("23:00", "old"),
+
+            ("00:35", "new"),
         ]
         
         self.targets = [
@@ -154,20 +156,24 @@ class Parasite():
                 logger.debug("Forced collection at %s", str(now))
             else:
                 logger.debug("Collection_datetime %s", str(collection_datetime))
-            self.keeper.dump_schedule()
-            logger.debug("Dumped schedule")
+            
+            
             logger.debug("Collecting")
             self.collector.collect()
             self.last_collected = utc_time_to_russian(datetime.utcnow())
             self.waiting_for_collection = False
             if self.mode != 'collect_only':
                 logger.debug("Constructing schedule")
+                self.keeper.dump_schedule()
+                logger.debug("Dumped schedule")
                 self.scheduler.construct_schedule()
 
             logger.debug("Finished collection")
 
         if self.force_schedule_construction:
             logger.debug("Forced constructing schedule")
+            self.keeper.dump_schedule()
+            logger.debug("Dumped schedule")
             self.scheduler.construct_schedule()
         if not self.waiting_for_collection:
             if self.mode != 'collect_only':
@@ -245,7 +251,7 @@ class Parasite():
         self.keeper = keeper.Keeper(self.timezone, self.prefix)
         self.collector = collector.Collector(self.reddit_username, self.reddit_password, self.reddit_app_client_id, self.reddit_app_secret,self.imgur_client_id,self.imgur_secret, self.targets ,self.pics_path, self.timezone, keeper = self.keeper)
         self.submitter = submitter.Submitter(self.vk_group_id, self.vk_app_id, self.vk_secret_key, self.vk_user_login, self.vk_user_password, self.polls_question, keeper = self.keeper)
-        self.scheduler = scheduler.Scheduler(self.keeper, self.timezone, self.schedule)
+        self.scheduler = scheduler.Scheduler(self.keeper, self.timezone, self.collection_time, self.schedule)
 
         
         self.main_loop()
