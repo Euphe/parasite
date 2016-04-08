@@ -33,7 +33,8 @@ class Submitter():
                 img = self.keeper.get_image(entry[2][0])
                 return self.post_image(img)
         except Exception as e:
-            logger.debug("Failed to post with exceiption: %s", str(e))
+            logger.debug("Failed to post with exceiption:")
+            logger.exception(e)
 
     def post_poll(self, images):
 
