@@ -60,6 +60,25 @@ class Collector():
     def filter_by_post_rules(self, posts, post_rules):
         return [ post for post in posts if post.score > post_rules["minimal score"] and post.over_18 == (post_rules["over 18"] if post_rules["over 18"] != "Any" else post.over_18) ]
 
+    def get_subr_posts(self, sub, category, limit, post_rules, retry=0):
+        if retry >= 3:
+            raise(Exception("Too many retries getting sub %s, couldn't collect sub."%(str(sub))))
+
+        try:
+            if category == "hot":
+                posts = self.filter_by_post_rules(list(sub.get_hot(limit=limit)), post_rules)
+            elif category == "new":
+                posts = self.filter_by_post_rules(list(sub.get_new(limit=limit)), post_rules)
+            else:
+                raise(Exception("Unknown reddit category"))
+
+            return posts
+        except praw.errors.HTTPException as e:
+            logger.debug("Caught HTTP exception when retrieving sub %s cat %s", str(sub), str(category))
+            logger.debug(e)
+            logger.debug("Retry number: %d", retry)
+            return self.get_subr_posts(sub, category, limit, post_rules, retry+1)
+
     def collect(self):
         posts = []
         for target in self.targets:
@@ -72,18 +91,12 @@ class Collector():
             sub = self.r.get_subreddit(rsub)
 
             #filter out bad posts
-            if category == "hot":
-                posts = posts + self.filter_by_post_rules(list(sub.get_hot(limit=target_amount*3)), post_rules)
-            elif category == "new":
-                posts = posts + self.filter_by_post_rules(list(sub.get_new(limit=target_amount*3)), post_rules)
-            else:
-                raise(Exception("Unknown reddit category"))
+            target_posts = self.get_subr_posts(sub, category, target_amount*3, post_rules)
+            posts = posts + target_posts
 
-            
-            posts = sorted(posts, key=lambda post:post.score, reverse=True)
+            target_posts = sorted(target_posts, key=lambda post:post.score, reverse=True)
 
-
-            posts, successes, failures = self.store(posts, target_amount)
+            target_posts, successes, failures = self.store(target_posts, target_amount)
 
             self.remove_old_posts(successes)
 
