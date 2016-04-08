@@ -71,7 +71,7 @@ class Keeper():
         for i in range(len(values)):
             values[i] = list(values[i])
             values[i][1] = ",".join([str(x) for x in values[i][1]])
-        print(values)
+        #print(values)
         self.cursor.executemany("INSERT INTO "+self.prefix+"_schedule VALUES (Null, ?, ?, ?)", values)
         self.connection.commit()
 

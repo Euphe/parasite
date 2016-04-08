@@ -10,15 +10,18 @@ import logging
 logger = logging.getLogger('parasite_logger')
 
 class Scheduler():
-    def __init__(self, keeper, timezone, schedule = []):
+    def __init__(self, keeper, timezone, collection_time, schedule = []):
         self.schedule_blueprint = schedule
         self.keeper = keeper
+        self.collection_time = collection_time
         self.timezone = timezone
+
 
     def construct_schedule(self):
         schedule = []
         now = utc_time_to_russian(datetime.utcnow())
         today = datetime(now.year, now.month, now.day)
+        tomorrow = datetime(now.year, now.month, now.day) + timedelta(days=1)
         pools = {
             'new':self.keeper.get_pool('new'),
             'old':self.keeper.get_pool('old')
@@ -26,8 +29,12 @@ class Scheduler():
         posted = []
         for entry in tuple(self.schedule_blueprint):
             time = entry[0].split(":")
+            collection_time = timedelta(hours=int(self.collection_time[0]), minutes=int(self.collection_time[1]))
             post_type = entry[1]
-            post_time = today + timedelta(hours=int(time[0]), minutes=int(time[1]))
+            if timedelta(hours=int(time[0]), minutes=int(time[1])) > collection_time:
+                post_time = today + timedelta(hours=int(time[0]), minutes=int(time[1]))
+            else:
+                post_time = tomorrow + timedelta(hours=int(time[0]), minutes=int(time[1]))
 
             if post_type == "poll":
                 pool = "new"
