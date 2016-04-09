@@ -12,14 +12,12 @@ if __name__ == "__main__":
 
             #ads
 
-            ("12:30", "new"),
             ("13:00", "new"),
 
             #ads 
 
             ("15:00", "new"),
             ("16:00", "new"),
-            ("17:00", "new"),
             ("18:00", "new"),
             ("19:00", "new"),
 
@@ -28,7 +26,6 @@ if __name__ == "__main__":
             ("21:00", "new"),
             ("21:30", "new"),
             ("22:00", "new"),
-            ("22:30", "new"),
             ("23:00", "new"),
             ("23:30", "new"),
             ("00:00", "new"),
@@ -49,7 +46,7 @@ if __name__ == "__main__":
                         "minimal score": 350, #int
                         "over 18": True, #False, True, "Any"
                     },
-                    "target_amount": 25
+                    "target_amount": 30
                 },
                 {
                     "subreddit": "RealGirls",
@@ -58,7 +55,7 @@ if __name__ == "__main__":
                         "minimal score": 300, #int
                         "over 18": False, #False, True, "Any"
                     },
-                    "target_amount": 8
+                    "target_amount": 10
                 },
                 {
                     "subreddit": "realasians",
@@ -67,7 +64,7 @@ if __name__ == "__main__":
                         "minimal score": 150, #int
                         "over 18": False, #False, True, "Any"
                     },
-                    "target_amount": 15
+                    "target_amount": 20
                 },
 
     ]
